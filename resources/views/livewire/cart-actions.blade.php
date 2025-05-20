@@ -3,7 +3,8 @@
         <button class="btn btn-danger w-100" wire:click='clearCart()'>Annuler</button>
     </div>
     <div class="col-4">
-        <button class="btn btn-warning w-100">Garder</button>
+        <button class="btn btn-warning w-100" wire:click="saveCart">Garder</button>
+        
     </div>
     <div class="col-4">
         <button class="btn btn-success w-100" wire:click='checkout()'>Payer</button>

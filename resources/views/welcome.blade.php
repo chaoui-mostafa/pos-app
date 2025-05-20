@@ -1,16 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app') {{-- or your custom layout --}}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Add this in your head section -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    {{-- @livewireStyles() --}}
-    <style>
+@section('content')
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>POS System</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        @livewireStyles
+          <style>
         :root {
             --primary: #6a1e96;
             --primary-hover: #e3d1ee;
@@ -18,303 +20,346 @@
             --primary-text-hover-color: #44016b;
             --primary-border-color: #290041;
             --primary-outline: #c390e0;
-        }
-
-        .btn-primary {
-            border-color: var(--primary-border-color);
-            color: var(--primary-text-color);
-            background-color: var(--primary);
-        }
-
-        .btn-primary:hover {
-            border-color: var(--primary-border-color);
-            color: var(--primary-text-hover-color);
-            background-color: var(--primary-hover);
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover) !important;
-            border-color: var(--primary-border-color) !important;
-            color: var(--primary-text-hover-color) !important;
+            --left-panel-width: 30%;
+            --splitter-width: 8px;
+            --header-height: 180px;
         }
 
         body {
             overflow-x: hidden;
+            height: 100vh;
+            margin: 0;
         }
 
         .pos-container {
             height: 100vh;
-            max-width: 100vw;
+            width: 100vw;
             overflow: hidden;
-        }
-
-        .row {
-            margin-right: 0;
-            margin-left: 0;
+            display: flex;
         }
 
         .left-panel {
             background: #f8f9fa;
             border-right: 2px solid #dee2e6;
-        }
-
-        .product-list {
-            height: calc(100vh - 290px);
-            overflow-y: auto;
+            height: 100%;
+            width: var(--left-panel-width);
+            min-width: 300px;
+            max-width: 50%;
+            display: flex;
+            flex-direction: column;
             position: relative;
         }
 
-        .product-list thead th {
-            position: sticky;
+        .right-panel {
+            flex: 1;
+            height: 100%;
+            min-width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-content {
+            padding: 1rem;
+        }
+
+        /* Splitter handle */
+        .splitter {
+            width: var(--splitter-width);
+            height: 100%;
+            background-color: #ddd;
+            cursor: col-resize;
+            position: absolute;
+            right: 0;
             top: 0;
-            background: #f8f9fa;
-            /* Match your left-panel background color */
-            z-index: 1;
-            border-bottom: 2px solid #dee2e6;
-            padding: 0.75rem;
-            font-weight: 500;
+            z-index: 100;
+            transition: background-color 0.2s;
         }
 
-        .product-list tbody {
-            position: relative;
-            z-index: 0;
+        .splitter:hover, .splitter.active {
+            background-color: var(--primary);
         }
 
-        /* Add this to ensure header stays above scroll content */
-        .product-list table {
-            border-collapse: separate;
-            border-spacing: 0;
+        /* Right panel layout */
+        .right-panel-header {
+            height: var(--header-height);
+            overflow-y: auto;
+            flex-shrink: 0;
         }
 
-        /* Enhanced scroll styling */
-        .product-scroll::-webkit-scrollbar,
-        .product-grid-container::-webkit-scrollbar {
-            width: 3px;
+        .product-grid-container {
+            flex: 1;
+            overflow: auto;
+            min-height: 0; /* Fix for Firefox */
         }
 
-        .product-scroll::-webkit-scrollbar-track,
-        .product-grid-container::-webkit-scrollbar-track {
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
             background: #f1f1f1;
-        }
-
-        .product-scroll::-webkit-scrollbar-thumb,
-        .product-grid-container::-webkit-scrollbar-thumb {
-            background: #cfd9ff;
             border-radius: 4px;
         }
 
-        .product-list::-webkit-scrollbar-thumb:hover,
-        .product-grid-container::-webkit-scrollbar-thumb:hover {
-            background: #7b96ff;
-            box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.1);
+        ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 4px;
         }
 
-        /* Product grid container styling */
-        .product-grid-container {
-            height: calc(100vh - 170px);
-            overflow-x: auto;
-            cursor: grab;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
         }
 
-        .product-grid-container.dragging {
-            cursor: grabbing;
-            user-select: none;
-        }
-
-        /* Keep totals section fixed at bottom */
-        .totals-section {
-            background: #f1f1f1;
-            padding-top: 1rem;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        /* Product grid styling */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
         }
 
         .product-card {
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .product-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
-        .drag-scroll::-webkit-scrollbar {
-            display: none;
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            :root {
+                --left-panel-width: 40%;
+                --header-height: 220px;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
         }
 
-        .drag-scroll {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        @media (max-width: 768px) {
+            .pos-container {
+                flex-direction: column;
+            }
 
-        /* Dragging cursor feedback */
-        .drag-scroll.dragging {
-            cursor: grabbing;
-            user-select: none;
-        }
+            .left-panel, .right-panel {
+                width: 100% !important;
+                max-width: 100%;
+                min-width: 100%;
+                height: 50%;
+            }
 
-        .fade-overlay {
-            position: absolute;
-            top: 0;
-            width: 35px;
-            height: 100%;
-            pointer-events: none;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
-        }
+            .splitter {
+                width: 100%;
+                height: 8px;
+                top: auto;
+                bottom: 0;
+                cursor: row-resize;
+            }
 
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
+            .right-panel-header {
+                height: auto;
+                max-height: 40%;
+            }
 
-        .btn-outline-primary {
-            border-color: #2A4E6C;
-            color: #2A4E6C;
-        }
-
-        .btn-outline-primary:hover {
-            background-color: var(--primary-outline) !important;
-            color: var(--primary-text-hover-color) !important;
-            border-color: var(--primary-border-color) !important;
-        }
-
-        .btn-outline-primary:active {
-            background-color: var(--primary) !important;
-            border-color: var(--primary-border-color) !important;
-            color: white !important;
-        }
-
-        .btn-link.text-danger:hover {
-            color: #6e000b !important;
-            scale: 1.03
-        }
-
-        .btn-link.text-danger:active {
-            color: #ce0015 !important;
-            scale: 0.93
-        }
-
-        tr:hover {
-            background-color: #5f7f9e;
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
         }
     </style>
-</head>
+    </head>
 
-<body>
-    <div class="container-fluid pos-container">
-        <div class="row h-100">
-            <!-- Left Panel (1/3) -->
-            <div class="col-md-4 left-panel p-3">
-                <!-- Client/Warehouse Selection -->
-                @livewire('client-warehouse-selector')
-                @livewire('product-cart')
+    <body>
 
-                <!-- Totals Section -->
-                <div class=" totals-section">
-                    @livewire('totals-section')
 
-                    <!-- Action Buttons -->
-                    @livewire('cart-actions')
+        <div class="pos-container">
+            <!-- Left Panel -->
+            <div class="left-panel" id="leftPanel">
+                <div class="panel-content">
+                    <div class="scrollable-section">
+                        @livewire('client-warehouse-selector')
+                        @livewire('product-cart')
+                    </div>
+                    <div class="totals-section">
+                        @livewire('totals-section')
+                        @livewire('cart-actions')
+                    </div>
+                </div>
+                <div class="splitter" id="splitter"></div>
+            </div>
 
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <div class="right-panel-header panel-content">
+                    @livewire('product-search-and-buttons')
+                    @livewire('category-list')
+                    @livewire('brand-list')
+                </div>
+                <div class="product-grid-container panel-content">
+                    @livewire('product-grid')
                 </div>
             </div>
-
-            <!-- Right Panel (2/3) -->
-            <div class="col-md-8 p-3" style="overflow-x: hidden;">
-                <!-- Search and Buttons -->
-                @livewire('product-search-and-buttons')
-
-                <!-- Categories -->
-                @livewire('category-list')
-
-                <!-- Brands -->
-                @livewire('brand-list')
-
-                <!-- Products Grid -->
-                @livewire('product-grid')
-
-            </div>
         </div>
-    </div>
-    <script>
-        let isDown = false;
-        let startX;
-        let scrollLeft;
 
-        function handleMouseDown(e) {
-            isDown = true;
-            const slider = e.currentTarget;
-            slider.classList.add('dragging');
-            startX = e.pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-        }
+        @livewireScripts
 
-        function handleMouseUp(e) {
-            isDown = false;
-            const slider = e.currentTarget;
-            slider.classList.remove('dragging');
-        }
+        <!-- Resize & drag scroll scripts -->
+           <script>
+        // Panel resizing functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const splitter = document.getElementById('splitter');
+            const leftPanel = document.getElementById('leftPanel');
+            const posContainer = document.querySelector('.pos-container');
+            let isDragging = false;
+            let startPosition = 0;
+            let startWidth = 0;
 
-        function handleMouseMove(e) {
-            if (!isDown) return;
-            e.preventDefault();
-            const slider = e.currentTarget;
-            const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 2; // Adjust multiplier for scroll speed
-            slider.scrollLeft = scrollLeft - walk;
-        }
-        // Vertical drag-to-scroll for product list
-        // Vertical scrolling functions
-        let isDraggingVertical = false;
-        let startY;
-        let scrollTop;
+            splitter.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                splitter.classList.add('active');
 
-        function handleMouseDownProduct(e) {
-            isDraggingVertical = true;
-            const target = e.currentTarget;
-            startY = e.pageY - target.getBoundingClientRect().top;
-            scrollTop = target.scrollTop;
-            target.style.cursor = 'grabbing';
-            target.style.userSelect = 'none';
-        }
+                if (window.innerWidth > 768) {
+                    // Horizontal resize
+                    document.body.style.cursor = 'col-resize';
+                    startPosition = e.clientX;
+                    startWidth = leftPanel.offsetWidth;
+                } else {
+                    // Vertical resize
+                    document.body.style.cursor = 'row-resize';
+                    startPosition = e.clientY;
+                    startWidth = leftPanel.offsetHeight;
+                }
 
-        function handleMouseUpProduct(e) {
-            isDraggingVertical = false;
-            const target = e.currentTarget;
-            target.style.cursor = 'default';
-            target.style.userSelect = 'auto';
-        }
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+                e.preventDefault();
+            });
 
-        function handleMouseMoveProduct(e) {
-            if (!isDraggingVertical) return;
-            e.preventDefault();
-            const target = e.currentTarget;
-            const y = e.pageY - target.getBoundingClientRect().top;
-            const walk = (y - startY) * 2;
-            target.scrollTop = scrollTop - walk;
-        }
+            function handleDrag(e) {
+                if (!isDragging) return;
 
-        window.addEventListener('cartUpdated', (event) => {
-            console.log();
-            if (event.detail.type) {
-                Swal.fire({
-                    toast: true,
-                    position: "bottom-end",
+                if (window.innerWidth > 768) {
+                    // Horizontal resize
+                    const containerWidth = posContainer.offsetWidth;
+                    const newWidth = startWidth + (e.clientX - startPosition);
+                    const minWidth = 300;
+                    const maxWidth = containerWidth * 0.5;
 
-                    icon: event.detail.type,
-                    title: event.detail.title,
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                });
+                    if (newWidth >= minWidth && newWidth <= maxWidth) {
+                        leftPanel.style.width = `${newWidth}px`;
+                    }
+                } else {
+                    // Vertical resize
+                    const containerHeight = posContainer.offsetHeight;
+                    const newHeight = startWidth + (e.clientY - startPosition);
+                    const minHeight = 200;
+                    const maxHeight = containerHeight - 200;
+
+                    if (newHeight >= minHeight && newHeight <= maxHeight) {
+                        leftPanel.style.height = `${newHeight}px`;
+                    }
+                }
             }
+
+            function stopDrag() {
+                isDragging = false;
+                splitter.classList.remove('active');
+                document.body.style.cursor = '';
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            // Initialize drag-to-scroll for product grids
+            initializeDragScroll('.scrollable-section');
+            initializeDragScroll('.product-grid-container');
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth <= 768) {
+                    leftPanel.style.width = '100%';
+                    leftPanel.style.height = '50%';
+                } else {
+                    leftPanel.style.height = '100%';
+                }
+            });
+
+            // SweetAlert notifications
+            window.addEventListener('cartUpdated', (event) => {
+                if (event.detail.type) {
+                    Swal.fire({
+                        toast: true,
+                        position: "bottom-end",
+                        icon: event.detail.type,
+                        title: event.detail.title,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                    });
+                }
+            });
         });
 
+        function initializeDragScroll(selector) {
+            const elements = document.querySelectorAll(selector);
 
+            elements.forEach(element => {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+                let startY;
+                let scrollTop;
 
+                element.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    startX = e.pageX - element.offsetLeft;
+                    scrollLeft = element.scrollLeft;
+                    startY = e.pageY - element.offsetTop;
+                    scrollTop = element.scrollTop;
+                    element.style.cursor = 'grabbing';
+                });
+
+                element.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    element.style.cursor = '';
+                });
+
+                element.addEventListener('mouseup', () => {
+                    isDown = false;
+                    element.style.cursor = '';
+                });
+
+                element.addEventListener('mousemove', (e) => {
+                    if(!isDown) return;
+                    e.preventDefault();
+
+                    // Horizontal scrolling
+                    const x = e.pageX - element.offsetLeft;
+                    const walkX = (x - startX) * 2;
+                    element.scrollLeft = scrollLeft - walkX;
+
+                    // Vertical scrolling
+                    const y = e.pageY - element.offsetTop;
+                    const walkY = (y - startY) * 2;
+                    element.scrollTop = scrollTop - walkY;
+                });
+            });
+        }
     </script>
 
+ <script>
+            // Your full JavaScript goes here (already correct in your code)
+        </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {{-- @livewireScripts() --}}
-</body>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 
-</html>
+    </html>
+@endsection

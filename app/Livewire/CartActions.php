@@ -48,7 +48,7 @@ class CartActions extends Component
             'remise' => 5,
         ]);
 
-        $cartService->saveToDatabase($commande->id);
+        $cartService->saveToDatabase(commandeId: $commande->id);
         $cartService->clearCart();
         $this->dispatch('cartUpdated', type: 'success', title: 'Votre commande a été passée avec succès.');
 
@@ -57,6 +57,24 @@ class CartActions extends Component
         session()->flash('success', 'Post successfully updated.');
         // Session::flash('success', 'Proceeding to checkout.');
     }
+    public function saveCart()
+{
+    $cartService = app(CartService::class);
+    $cart = $cartService->getCart();
+
+    if (empty($cart)) {
+        $this->dispatch('cartUpdated', type: 'error', title: 'Panier vide, rien à enregistrer.');
+        return;
+    }
+
+    $this->saveToSession(); // أو أي منطق حفظ يناسبك
+    $this->dispatch('cartUpdated', type: 'success', title: 'Panier enregistré avec succès.');
+}
+public function saveToSession()
+{
+    $cartService = app(CartService::class);
+    session()->put('cart', $cartService->getCart());
+}
     public function render()
     {
         return view('livewire.cart-actions',[
